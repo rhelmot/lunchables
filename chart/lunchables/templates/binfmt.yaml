@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-binfmt
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-binfmt
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-binfmt
+    spec:
+      containers:
+      - name: binfmt
+        image: rhelmot/binfmt:latest
+        command:
+          - "sh"
+          - "-c"
+          - |-
+              python3 binfmt.py /mnt/fakeproc/sys/fs/binfmt_misc && sleep 9999999999
+        args: []
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: 1m
+            memory: 64Mi
+          requests:
+            cpu: 1m
+            memory: 64Mi
+        volumeMounts:
+        - name: fakeproc
+          mountPath: /mnt/fakeproc
+      volumes:
+      - name: fakeproc
+        hostPath:
+          path: /proc

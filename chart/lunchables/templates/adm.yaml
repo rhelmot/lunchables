@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-leader-adm
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-leader-adm
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-leader-adm
+    spec:
+      serviceAccountName: {{ .Release.Name }}-leader
+      imagePullSecrets:
+        - name: {{ .Release.Name }}-docker
+      containers:
+      - name: leader
+        image: {{ include "lunchables.leader-image" . | quote }}
+        imagePullPolicy: {{ .Values.dockerRegistry.imagePullPolicy }}
+        command:
+          - 'sleep'
+          - '9999999999'
+        args: []
+        env:
+          - name: DOCKER_REGISTRY
+            value: {{ .Values.dockerRegistry.domain }}
+          - name: DOCKER_PULL_SECRET
+            value: {{ .Release.Name }}-docker
+          - name: IMAGE_PULL_POLICY
+            value: {{ .Values.dockerRegistry.imagePullPolicy }}
+          - name: IMAGE_LEADER
+            value: {{ include "lunchables.leader-image" . | quote }}
+          - name: IMAGE_REX
+            value: {{ include "lunchables.rex-image" . | quote }}
+          - name: IMAGE_GREENHOUSE
+            value: {{ include "lunchables.greenhouse-image" . | quote }}
+          - name: IMAGE_GH2FUZZ
+            value: {{ include "lunchables.gh2fuzz-image" . | quote }}
+          - name: IMAGE_GH2FUZZ_POSTAUTH
+            value: {{ include "lunchables.gh2fuzz_postauth-image" . | quote }}
+          - name: IMAGE_GH2ROUTERSPLOIT
+            value: {{ include "lunchables.gh2routersploit-image" . | quote }}
+          - name: IMAGE_RIP
+            value: {{ include "lunchables.rip-image" . | quote }}
+          - name: IMAGE_FUZZING
+            value: {{ .Values.dockerRegistry.images.fuzzing | quote }}
+          - name: MONGO_SECRET
+            value: {{ .Release.Name }}-mongo
+          - name: MONGO_URL
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-mongo
+                key: url
+          - name: MONGO_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-mongo
+                key: database
+          - name: BUCKET_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-minio
+                key: password
+          - name: BUCKET_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-minio
+                key: username
+          - name: BUCKET_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-minio
+                key: endpoint
+          - name: BUCKET_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-minio
+                key: bucket
+          - name: BUCKET_SECRET
+            value: {{ .Release.Name }}-minio
+          - name: KUBE_SECRET
+            value: {{ .Release.Name }}-kube
+          - name: KUBE_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-kube
+                key: namespace
+          - name: KUBE_RELEASE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-kube
+                key: release
+          - name: KUBE_CPU_QUOTA
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-kube
+                key: cpu_quota
+          - name: KUBE_MEM_QUOTA
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-kube
+                key: mem_quota
+          - name: ELASTIC_SECRET
+            value: {{ .Release.Name }}-elastic
+          - name: ELASTIC_LOGS_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-elastic
+                key: endpoint
+          - name: ELASTIC_LOGS_INDEX
+            value: {{ .Values.elasticsearch.indexName | quote }}
+          - name: RWX_PVC
+            value: {{ include "lunchables.rwx-pvc" . | quote }}
+          - name: RWX_PATH
+            value: {{ include "lunchables.rwx-path" . | quote }}
+          - name: FUZZER_TIMEOUT_HOURS
+            value: {{ .Values.fuzzer.timeoutHours | quote }}
+          - name: INCLUSTER
+            value: "1"
+          {{- range $index, $mapping := .Values.priorities }}
+          - name: PRIORITY_{{ $index }}
+            value: {{ $mapping | toJson | quote }}
+          {{- end }}
+        volumeMounts:
+          - name: docker-auth
+            mountPath: /root/.docker
+          - name: rwx
+            mountPath: /shared
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+      restartPolicy: Always
+      volumes:
+        - name: docker-auth
+          secret:
+            secretName: {{ .Release.Name }}-docker
+            items:
+              - key: .dockerconfigjson
+                path: config.json
+        - name: rwx
+          persistentVolumeClaim:
+            claimName: {{ include "lunchables.rwx-pvc" . | quote }}

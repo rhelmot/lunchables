@@ -1,0 +1,29 @@
+global:
+  storageClass: "openebs-hostpath"
+  clusterDomain: "gwc.sefcom"
+
+rwx:
+  existingPvc: "nfs"
+  existingPath: "/rhelmot/lunchables"
+  provision: false
+
+dockerRegistry:
+  domain: "docker.shellphish.net"
+  username: "shellphish"
+  # password
+
+minio:
+  bucketName: "lunchables"
+  existingEndpoint: "minio.rhelmot.svc.gwc.sefcom:9000"
+  existingUsername: "rhelmot"
+  # existingPassword
+  enabled: false
+
+elasticsearch:
+  clusterDomain: "gwc.sefcom"
+
+nfs-server-provisioner:
+  enabled: false
+
+localConfig:
+  enabled: true

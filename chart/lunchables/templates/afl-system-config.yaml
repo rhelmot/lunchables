@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-afl-system-config
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-afl-system-config
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-afl-system-config
+    spec:
+      containers:
+      - name: afl-system-config
+        image: rhelmot/afl-system-config:latest
+        command:
+          - "sh"
+          - "-c"
+          - |-
+              /root/afl-system-config /fake && sleep 9999999999
+        args: []
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: 1m
+            memory: 64Mi
+          requests:
+            cpu: 1m
+            memory: 64Mi
+        volumeMounts:
+        - name: fake
+          mountPath: /fake
+      volumes:
+      - name: fake
+        hostPath:
+          path: /

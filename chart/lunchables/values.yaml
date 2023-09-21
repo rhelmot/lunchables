@@ -1,0 +1,158 @@
+global:
+  # the kube storage class for ReadWriteOnce persistent storage, as described in the readme.
+  storageClass: "standard"
+  # if your cluster uses a non-default local domain name, please change it here
+  # if you change this, change elasticsearch.clusterDomain too
+  clusterDomain: "cluster.local"
+  # set this to enable/disable the dashboard for the pipeline logs
+  kibanaEnabled: true
+
+rwx:
+  # if you like, you can use an existing ReadWriteMany PVC instead of allocating one. Set this to the name of the PVC.
+  existingPvc: ""
+  # if you like, you can use an existing ReadWriteMany PVC instead of allocating one. Set this to the subpath to use in that PVC.
+  existingPath: ""
+  # set this to false if you want to use the above existing ReadWriteMany PVC.
+  provision: true
+  # you probably don't need to change this unless you've disabled the nfs-storage-provisioner and are using a pre-existing ReadWriteMany storageclass.
+  storageClass: "nfs"
+  # this is the amount of disk space allocated to firmware samples
+  storageSize: "18Gi"
+
+dockerRegistry:
+  # these are the credentials to your private docker registry
+  # if you are using the in-house setup from the lunchables/docker-registry folder, the ./creds.sh script will provide these.
+  domain: docker.example.com
+  username: changeme
+  password: changeme
+  email: me@example.com  # I don't know how this is used
+
+  # probably don't change these please
+  imagePullPolicy: Always
+
+  # these are the image names that will be pulled for vaious stages of the pipeline's analysis. If they are not public, they will be pulled using the credentials above.
+  images:
+    leader: docker.example.com/lunchables/leader:latest
+    rex: docker.example/com/lunchables/rex:latest
+    gh2fuzz: docker.example.com/lunchables/gh2fuzz:latest
+    greenhouse: docker.example.com/lunchables/greenhouse:latest
+    gh2routersploit: docker.example.com/lunchables/gh2routersploit:latest
+    rip: docker.example.com/lunchables/rip:latest
+
+
+# any priority adjustments to make to the scheduler
+priorities: []
+  # - task: rex
+  #   priority: 1
+  # - job: 1234
+  #   priority: 2
+  # - task: greenhouse
+  #   job: 1234
+  #   priority: -1
+
+# The maximum amount of resources that the pipeline tasks will attempt to take from the cluster at once
+# there's no "good" ratio, just set them as high as you're comfortable with
+# minimums are 4 cpu/10Gi ram
+pipelineResources:
+  cpu: "4"
+  mem: "10Gi"
+
+# The cron job which coordinates the pipeline.
+leader:
+  # how often should the leader run?
+  freqMinutes: 2
+  # for debugging - how long should the leader cron job pods persist before being deleted
+  ttlSecondsAfterFinished: 120
+
+# settings for the fuzzing component of the pipeline
+fuzzer:
+  # for how long should the fuzzer run (with one core) before timing out?
+  timeoutHours: 24
+
+# settings for the monogodb dependency. probably don't change this unless you want to change the passwords or the disk allocation
+# or if you want to connect to a preexisting mongodb service
+mongodb:
+  # if you set enabled: false below, set this to the connection url for an existing mongodb instance
+  existingUrl: ""
+  existingDatabase: "lunchables"
+
+  enabled: true
+  service:
+    nameOverride: mongodb  # must be unique per release
+  persistence:
+    size: 4Gi  # disk allocation for metadata
+  auth:
+    rootPassword: "e9d3f85e4c369f73675d9f497fb7dd99"
+    usernames: [ "lunchables" ]
+    passwords: [ "142a31293f8ad1425419d0e778562f91" ]
+    databases: [ "lunchables" ]
+
+# settings for the minio dependency. probably don't change this unless you're just changing the password or the disk allocation
+# or if you want to connect to a preexisting minio instance
+minio:
+  bucketName: "lunchables"
+
+  # if you set enabled: false below, set these to the connection parameters for an existing minio/s3 instance
+  existingEndpoint: ""
+  existingUsername: ""  # in case of s3, use service account ID
+  existingPassword: ""  # in case of s3, use service account secret token
+
+  enabled: true
+  storageSize: 18Gi  # disk allocation for the greenhouse results, task logs, exploits, and crashes
+  fullnameOverride: minio  # must be unique per release
+  auth:
+    rootUser: "lunchables"
+    rootPassword: "a19df919c9774d0082b7d2d21f729c8b"
+
+# settings for the elasticsearch dependency. probably don't change this unless you're changing the disk allocation
+# or unless you want to connect to an existing elasticsearch endpoint
+# exception: please change the clusterDomain to your clusterDomain. I don't know why it won't pick up the global one.
+elasticsearch:
+  # the name of the index to store the leader logs in
+  indexName: "lunchables-leader-logs"
+
+  # if you set enabled: false below, set this to the endpoint of an existing elasticsearch instance
+  existingEndpoint: ""
+
+  enabled: true
+  clusterDomain: "cluster.local"  # change this to your cluster domain
+  data:
+    persistence:
+      size: 4Gi  # disk allocation for the leader logs
+  master:
+    masterOnly: false
+    replicaCount: 1
+    # the cpu/mem allocations for the elasticsearch (logging) pod
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 1
+        memory: 1Gi
+    heapSize: 512m
+  data:
+    replicaCount: 0
+  ingest:
+    enabled: false
+  coordinating:
+    replicaCount: 0
+  kibana:
+    elasticsearch:
+      hosts:
+        - '{{ .Release.Name }}-elasticsearch'  # this is so fucking stupid
+
+# settings for the nfs dependency
+nfs-server-provisioner:
+  enabled: true  # disable this if you're using a separate RWX provisioner
+  persistence:
+    enabled: true
+    storageClass: standard  # the storageclass for the RWO volume used to back the RWX volume
+    size: 20Gi  # should be slightly larger than rwx.storageSize
+  storageClass:
+    name: nfs  # must be unique per release
+      # also if you change this make sure to change rwx.storageClass
+
+localConfig:
+  # enable this to get additional config allowing you to run the leader from outside the cluster
+  enabled: false

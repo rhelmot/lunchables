@@ -1,0 +1,15 @@
+dependencies:
+- name: minio
+  repository: https://charts.bitnami.com/bitnami
+  version: 11.10.26
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 13.5.0
+- name: elasticsearch
+  repository: https://charts.bitnami.com/bitnami
+  version: 19.5.15
+- name: nfs-server-provisioner
+  repository: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner
+  version: 1.4.0
+digest: sha256:d2f6403dd7e05660cba4881aaa711e268e4c841025b35da95a2a2db0950476ec
+generated: "2023-03-30T14:22:54.986800008-07:00"

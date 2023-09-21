@@ -1,0 +1,16 @@
+{{- if .Values.rwx.provision -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name:
+    {{ .Release.Name }}-rwx
+  labels:
+    {{- include "lunchables.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.rwx.storageSize | quote }}
+  storageClassName: {{ .Values.rwx.storageClass | quote }}
+{{- end -}}
