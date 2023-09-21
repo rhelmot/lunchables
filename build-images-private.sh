@@ -16,11 +16,12 @@ cd -
 
 dockerbuild() {
 	IMAGE="$REGISTRY/$PREFIX/$1:$TAG"
-	shift
-	docker buildx build --build-arg BUILDKIT_INLINE_CACHE=1 -t "$IMAGE" --cache-from "$IMAGE" "$@"
 	if [ -z "$NO_PUSH" ]; then
-		docker push $IMAGE
+		PUSH="--push"
 	fi
+
+	shift
+	docker buildx build $PUSH --cache-to "type=registry,ref=$IMAGE-cache" --cache-from "type=registry,ref=$IMAGE-cache" -t "$IMAGE" --cache-from "$IMAGE" "$@"
 }
 dockerbuild leader leader
 dockerbuild gh2fuzz gh2fuzz
