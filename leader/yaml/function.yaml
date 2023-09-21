@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Pod
+spec:
+  imagePullSecrets:
+    - name: "{{ env.DOCKER_PULL_SECRET }}"
+  containers:
+    - name: leader
+      image: "{{ env.IMAGE_LEADER }}"
+      imagePullPolicy: "{{ env.IMAGE_PULL_POLICY }}"
+      command:
+        - python3
+        - {{argv0}}
+        - launch
+        - "{{task}}"
+        - "{{job}}"
+        - "--force"
+        - "--sync"
+      env:
+        - name: DOCKER_REGISTRY
+          value: "{{ env.DOCKER_REGISTRY }}"
+        - name: DOCKER_PULL_SECRET
+          value: "{{ env.DOCKER_PULL_SECRET }}"
+        - name: IMAGE_LEADER
+          value: "{{ env.IMAGE_LEADER }}"
+        - name: IMAGE_REX
+          value: "{{ env.IMAGE_REX }}"
+        - name: IMAGE_GREENHOUSE
+          value: "{{ env.IMAGE_GREENHOUSE }}"
+        - name: IMAGE_GH2FUZZ
+          value: "{{ env.IMAGE_GH2FUZZ }}"
+        - name: IMAGE_GH2ROUTERSPLOIT
+          value: "{{ env.IMAGE_GH2ROUTERSPLOIT }}"
+        - name: IMAGE_RIP
+          value: "{{ env.IMAGE_RIP }}"
+        - name: IMAGE_FUZZING
+          value: "{{ env.IMAGE_FUZZING }}"
+        - name: MONGO_SECRET
+          value: "{{ env.MONGO_SECRET }}"
+        - name: MONGO_URL
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.MONGO_SECRET }}"
+              key: url
+        - name: MONGO_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.MONGO_SECRET }}"
+              key: database
+        - name: BUCKET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.BUCKET_SECRET }}"
+              key: password
+        - name: BUCKET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.BUCKET_SECRET }}"
+              key: username
+        - name: BUCKET_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.BUCKET_SECRET }}"
+              key: endpoint
+        - name: BUCKET_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.BUCKET_SECRET }}"
+              key: bucket
+        - name: BUCKET_SECRET
+          value: "{{ env.BUCKET_SECRET }}"
+        - name: KUBE_SECRET
+          value: "{{ env.KUBE_SECRET }}"
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.KUBE_SECRET }}"
+              key: namespace
+        - name: KUBE_RELEASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.KUBE_SECRET }}"
+              key: release
+        - name: KUBE_CPU_QUOTA
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.KUBE_SECRET }}"
+              key: cpu_quota
+        - name: KUBE_MEM_QUOTA
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.KUBE_SECRET }}"
+              key: mem_quota
+        - name: ELASTIC_SECRET
+          value: "{{ env.ELASTIC_SECRET }}"
+        - name: ELASTIC_LOGS_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: "{{ env.ELASTIC_SECRET }}"
+              key: endpoint
+        - name: ELASTIC_LOGS_INDEX
+          value: "{{ env.ELASTIC_LOGS_INDEX }}"
+        - name: RWX_PVC
+          value: "{{ env.RWX_PVC }}"
+        - name: RWX_PATH
+          value: "{{ env.RWX_PATH }}"
+        - name: FUZZER_TIMEOUT_HOURS
+          value: "{{ env.FUZZER_TIMEOUT_HOURS }}"
+        - name: INCLUSTER
+          value: "0"
+      volumeMounts:
+        - name: docker-auth
+          mountPath: /root/.docker
+        - name: rwx
+          mountPath: /shared
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+  restartPolicy: Never
+  volumes:
+    - name: docker-auth
+      secret:
+        secretName: "{{ env.DOCKER_PULL_SECRET }}"
+        items:
+            - key: .dockerconfigjson
+              path: config.json
+    - name: rwx
+      persistentVolumeClaim:
+        claimName: "{{ env.RWX_PVC }}"

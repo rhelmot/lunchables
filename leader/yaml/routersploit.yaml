@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Pod
+spec:
+  imagePullSecrets:
+    - name: {{ image_pull_secret }}
+  containers:
+    - name: routersploit
+      image: {{ self_image }}
+      imagePullPolicy: {{ image_pull_policy }}
+      securityContext:
+        privileged: true
+      command:
+        - sh
+        - "-c"
+        - |
+          export TARGETPATH=/greenhouse.tar.gz
+          export OUTPATH=/routersploitdir
+          aws --endpoint-url "{{ greenhouse_result.endpoint }}" s3 cp "{{ greenhouse_result }}" $TARGETPATH
+          mkdir $OUTPATH
+          /entrypoint.sh
+          cd $OUTPATH
+          gzip *.tar
+          aws --endpoint-url "{{ routersploit_result.endpoint }}" s3 cp *.tar.gz "{{ routersploit_result }}"
+      env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ bucket_secret }}
+              key: username
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ bucket_secret }}
+              key: password
+      resources:
+        requests:
+          cpu: 300m
+          memory: 1Gi
+        limits:
+          cpu: 1500m
+          memory: 4Gi
+      volumeMounts:
+        - name: docker-auth
+          mountPath: "/root/.docker"
+  volumes:
+    - name: docker-auth
+      secret:
+        secretName: {{ image_pull_secret }}
+        items:
+          - key: .dockerconfigjson
+            path: config.json

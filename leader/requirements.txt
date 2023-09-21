@@ -1,0 +1,17 @@
+kubernetes
+kubernetes-asyncio
+python-dxf
+docker-registry-client-async
+jinja2
+pyyaml
+networkx
+coloredlogs
+aiobotocore
+motor
+sonyflake-py
+ipython
+aiofiles
+aioshutil
+pydatatask==0.4.7
+elasticsearch==7.17.7
+PYESHandler

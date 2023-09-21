@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+spec:
+  imagePullSecrets:
+    - name: {{ image_pull_secret }}
+  containers:
+    - name: phase5
+      image: {{ self_image }}
+      imagePullPolicy: {{ image_pull_policy }}
+      securityContext:
+        privileged: true  # needs dind
+      args:
+        - "sh"
+        - "-x"
+        - "-c"
+        - |
+            aws --endpoint-url "{{ crash_data.endpoint }}" s3 cp "{{ crash_data }}" /crash.bin
+            aws --endpoint-url "{{ greenhouse_result.endpoint }}" s3 cp "{{ greenhouse_result }}" /greenhouse.tar.gz
+            python3 t_rex.py --firmware /greenhouse.tar.gz --input /crash.bin
+            if [ -f exploit.py ]; then
+              echo "# exploit for {{ target.brand }} {{ target.basename }}" >>exploit.py
+            fi
+            aws --endpoint-url {{ exploit.endpoint }} s3 cp exploit.py {{ exploit }}
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ bucket_secret }}
+              key: username
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ bucket_secret }}
+              key: password
+      resources:
+        requests:
+          cpu: 1
+          memory: 4Gi
+        limits:
+          cpu: 2
+          memory: 6Gi

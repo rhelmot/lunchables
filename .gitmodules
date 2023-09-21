@@ -1,0 +1,15 @@
+[submodule "greenhouse"]
+	path = greenhouse
+	url = git@github.com:sefcom/greenhouse.git
+[submodule "haccs-rip"]
+	path = haccs-rip
+	url = git@github.com:sefcom/haccs-rip.git
+[submodule "T-Rex"]
+	path = T-Rex
+	url = git@github.com:kyle-kyle/T-Rex.git
+[submodule "gh2fuzz"]
+	path = gh2fuzz
+	url = git@github.com:sefcom/gh2fuzz.git
+[submodule "routersploit"]
+	path = routersploit
+	url = git@github.com:sefcom/routersploit_ghpatched.git

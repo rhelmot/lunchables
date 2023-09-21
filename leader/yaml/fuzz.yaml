@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Pod
+spec:
+  imagePullSecrets:
+    - name: {{ image_pull_secret }}
+  containers:
+    - name: phase1
+      image: {{ self_image }}
+      imagePullPolicy: {{ image_pull_policy }}
+      securityContext:
+        privileged: true
+      args:
+        - sh
+        - fuzz_gh.sh
+      env:
+      - name: GH_TAR_ENDPOINT
+        value: "{{ greenhouse_result.endpoint }}"
+      - name: GH_TAR
+        value: "{{ greenhouse_result }}"
+      - name: SAMPLE
+        value: "{{ job }}"
+      - name: MONGO_SUBCOLLECTION
+        value: "{{ mongo_subcollection }}"
+      - name: MONGO_SUBCOLLECTION_TMIN
+        value: "{{ mongo_subcollection_tmin }}"
+      - name: CRASH_ENDPOINT
+        value: "{{ crash_data.endpoint }}"
+      - name: CRASH_BUCKET
+        value: "{{ crash_data.bucket }}"
+      - name: CRASH_PREFIX
+        value: "{{ crash_data.prefix }}"
+      - name: CRASH_SUFFIX
+        value: "{{ crash_data.suffix }}"
+      - name: TMIN_BUCKET
+        value: "{{ tmincrash_data.bucket }}"
+      - name: TMIN_PREFIX
+        value: "{{ tmincrash_data.prefix }}"
+      - name: TMIN_SUFFIX
+        value: "{{ tmincrash_data.suffix }}"
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: "{{ bucket_secret }}"
+            key: username
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: "{{ bucket_secret }}"
+            key: password
+      - name: MONGO_URL
+        valueFrom:
+          secretKeyRef:
+            name: "{{ mongo_secret }}"
+            key: url
+      - name: MONGO_DATABASE
+        valueFrom:
+          secretKeyRef:
+            name: "{{ mongo_secret }}"
+            key: database
+      - name: FUZZ_TIMEOUT
+        value: "{{ fuzz_timeout }}"
+      resources:
+        requests:
+          cpu: 1
+          memory: 1Gi
+        limits:
+          cpu: 1
+          memory: 1Gi
+      volumeMounts:
+        - name: rwx
+          mountPath: "/shared"
+        - name: docker-auth
+          mountPath: "/root/.docker"
+        - name: buildx
+          mountPath: "/root/.docker/buildx"
+        - name: scratch
+          mountPath: "/scratch"
+  volumes:
+    - name: rwx
+      persistentVolumeClaim:
+        claimName: {{ rwx_pvc }}
+    - name: docker-auth
+      secret:
+        secretName: {{ image_pull_secret }}
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+    - name: buildx
+      emptyDir:
+        medium: Memory
+    - name: scratch
+      emptyDir:
+        medium: Memory
