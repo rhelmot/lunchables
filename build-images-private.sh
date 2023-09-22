@@ -3,7 +3,7 @@
 BASEDIR="$(dirname $(realpath $0))"
 REGISTRY="${1-docker.shellphish.net}"
 PREFIX="${2-lunchables}"
-TAG="${3-$(date +%Y-%m-%d-%H-%M-%S-%z)}"
+TAG="${3-$(date +%Y-%m-%d-%H-%M-%S-%Z)}"
 if [ -z "$REGISTRY" ]; then
 	echo "Usage: $0 registry [prefix] [tag]"
 	exit 1
