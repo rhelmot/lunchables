@@ -9,6 +9,8 @@ jobs:
     name: Deploy 
     runs-on: lunchables-runners
     steps:
+      - name: Build Deps
+        run: "sudo apt-get update && sudo apt-get install -y unzip git"
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -30,8 +32,6 @@ jobs:
         uses: azure/setup-kubectl@v3
         with:
           version: v1.26.0
-      - name: Helm Deps
-        run: "sudo apt-get update && sudo apt-get install -y unzip"
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
