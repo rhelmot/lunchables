@@ -55,4 +55,7 @@ jobs:
           mkdir -p ~/.kube
           echo "$RHELMOT_SEFCOM_KUBE_CONFIG" >~/.kube/config
       - name: Upgrade Deployment
-        run: ./deploy/deploy.sh
+        run: |
+          helm repo add nfs-ganesha-server-and-external-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          ./deploy/deploy.sh
