@@ -24,6 +24,3 @@ elasticsearch:
 
 nfs-server-provisioner:
   enabled: false
-
-localConfig:
-  enabled: true

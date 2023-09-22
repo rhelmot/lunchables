@@ -1,0 +1,17 @@
+priorities: []
+
+pipelineResources:
+  cpu: "64"
+  mem: "256Gi"
+
+fuzzer:
+  timeoutHours: 24
+
+mongodb:
+  persistence:
+    size: 4Gi
+
+elasticsearch:
+  data:
+    persistence:
+      size: 4Gi
