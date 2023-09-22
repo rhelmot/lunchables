@@ -11,6 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: true
+          ssh-key: ${{ secrets.RHELMOT_SSH_KEY }}
       - name: Set up Docker Context
         run: docker context create mine
       - name: Set up Docker Buildx
@@ -37,9 +40,9 @@ jobs:
         run: ./build-images-private.sh
       - name: Set Secrets
         env:
-          SHELLPHISH_DOCKER_PASSWORD: "{{ secrets.SHELLPHISH_DOCKER_PASSWORD}}"
-          RHELMOT_MINIO_PASSWORD: "{{ secrets.RHELMOT_MINIO_PASSWORD }}"
-          RHELMOT_SEFCOM_KUBE_CONFIG: "{{ secrets.RHELMOT_SEFCOM_KUBE_CONFIG }}"
+          SHELLPHISH_DOCKER_PASSWORD: ${{ secrets.SHELLPHISH_DOCKER_PASSWORD}}
+          RHELMOT_MINIO_PASSWORD: ${{ secrets.RHELMOT_MINIO_PASSWORD }}
+          RHELMOT_SEFCOM_KUBE_CONFIG: ${{ secrets.RHELMOT_SEFCOM_KUBE_CONFIG }}
         run: |
           cat >deploy/secrets.yaml <<EOF
           dockerRegistry:
