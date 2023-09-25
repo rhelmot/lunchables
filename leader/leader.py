@@ -457,7 +457,7 @@ async def action_backup(pipeline: Pipeline, backup_dir: str, repos: List[str]):
 
     await asyncio.gather(*jobs)
 
-async def action_localinstall():
+async def action_localinstall(pipeline):
     with open('/mnt/localcfg/install', 'r') as fp:
         print(fp.read(), end='')
 
