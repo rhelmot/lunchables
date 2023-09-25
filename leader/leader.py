@@ -332,6 +332,10 @@ def more_actions(subparsers: argparse._SubParsersAction):
     )
     parser_crash.set_defaults(func=action_inject_crash)
 
+    if incluster:
+        parser_localinstall = subparsers.add_parser("localinstall", help="Print an install script to get a local copy of the admin script")
+        parser_localinstall.set_defaults(func=action_localinstall)
+
     if not incluster:
         parser_backup = subparsers.add_parser(
             "backup", help="Copy contents of repositories to a given folder"
@@ -453,6 +457,9 @@ async def action_backup(pipeline: Pipeline, backup_dir: str, repos: List[str]):
 
     await asyncio.gather(*jobs)
 
+async def action_localinstall():
+    with open('/mnt/localcfg/install', 'r') as fp:
+        print(fp.read(), end='')
 
 if __name__ == "__main__":
     result = main(pipeline, more_actions)

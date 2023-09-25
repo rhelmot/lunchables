@@ -13,57 +13,9 @@ function pipeline-adm () {
 
 Alternately, set the following environment variables:
 
-export FUZZER_TIMEOUT_HOURS={{ .Values.fuzzer.timeoutHours }}
-export MONGO_SECRET={{ .Release.Name }}-mongo
-export MONGO_URL={{ include "lunchables.mongo-url-localhost" . }}
-export MONGO_URL_INCLUSTER={{ include "lunchables.mongo-url" . }}
-export MONGO_DATABASE={{ include "lunchables.mongo-database" . }}
-export BUCKET_USERNAME={{ include "lunchables.minio-username" . }}
-export BUCKET_ENDPOINT=localhost:9000
-export BUCKET_ENDPOINT_INCLUSTER={{ include "lunchables.minio-endpoint" . }}
-export BUCKET_SECRET={{ .Release.Name }}-minio
-export BUCKET_PASSWORD={{ include "lunchables.minio-password" . }}
-export BUCKET_BUCKET={{ .Values.minio.bucketName }}
-export ELASTIC_SECRET={{ .Release.Name }}-elastic
-export ELASTIC_LOGS_ENDPOINT=localhost:9200
-export ELASTIC_LOGS_INDEX={{ .Values.elasticsearch.indexName }}
-export RWX_PVC={{ include "lunchables.rwx-pvc" . }}
-export RWX_PATH={{ include "lunchables.rwx-path" . }}
-export KUBE_SECRET={{ .Release.Name }}-kube
-export KUBE_NAMESPACE={{ .Release.Namespace }}
-export KUBE_RELEASE_NAME={{ .Release.Name }}
-export KUBE_MEM_QUOTA={{ .Values.pipelineResources.mem }}
-export KUBE_CPU_QUOTA={{ .Values.pipelineResources.cpu }}
-export IMAGE_FUZZING={{ .Values.dockerRegistry.images.fuzzing }}
-export IMAGE_LEADER={{ include "lunchables.leader-image" . }}
-export IMAGE_REX={{ include "lunchables.rex-image" . }}
-export IMAGE_GREENHOUSE={{ include "lunchables.greenhouse-image" . }}
-export IMAGE_GH2FUZZ={{ include "lunchables.gh2fuzz-image" . }}
-export IMAGE_GH2FUZZ_POSTAUTH={{ include "lunchables.gh2fuzz_postauth-image" . }}
-export IMAGE_RIP={{ include "lunchables.rip-image" . }}
-export IMAGE_GH2ROUTERSPLOIT={{ include "lunchables.gh2routersploit-image" . }}
-export DOCKER_PULL_SECRET={{ .Release.Name }}-docker
-export IMAGE_PULL_POLICY={{ .Values.dockerRegistry.imagePullPolicy }}
-export DOCKER_REGISTRY={{ .Values.dockerRegistry.domain }}
-{{- range $index, $mapping := .Values.priorities }}
-export PRIORITY_{{ $index }}={{ $mapping | toJson | quote }}
-{{- end }}
+{{ include "lunchables.localenv" . }}
 
 And set the following port-forwards:
 
-#!/bin/bash
-{{ if .Values.elasticsearch.enabled -}}
-kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.elasticsearch-svc" . }} 9200 &
-{{- end }}
-{{- if .Values.minio.enabled }}
-kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.minio-svc" . }} 9000 &
-{{- end }}
-{{- if .Values.mongodb.enabled }}
-kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.mongo-svc" . }} 27017 &
-{{- end }}
-{{- if .Values.global.kibanaEnabled }}
-kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.kibana-svc" . }} 5601 &
-{{- end }}
-trap 'kill -INT $(jobs -p)' INT
-wait
+{{ include "lunchables.localfwd" . }}
 {{- end }}

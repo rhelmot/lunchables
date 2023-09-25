@@ -127,6 +127,8 @@ spec:
             mountPath: /root/.docker
           - name: rwx
             mountPath: /shared
+          - name: localcfg
+            mountPath: /mnt/localcfg
         resources:
           requests:
             cpu: 100m
@@ -142,3 +144,6 @@ spec:
         - name: rwx
           persistentVolumeClaim:
             claimName: {{ include "lunchables.rwx-pvc" . | quote }}
+        - name: localcfg
+          secret:
+            secretName: {{ .Release.Name }}-localcfg
