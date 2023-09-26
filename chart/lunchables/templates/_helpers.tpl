@@ -204,16 +204,25 @@ export PRIORITY_{{ $index }}={{ $mapping | toJson | quote }}
 {{- end }}
 
 {{- define "lunchables.localfwd" -}}
-#!/bin/bash
+#!/usr/bin/env bash
 {{ if .Values.elasticsearch.enabled -}}
 kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.elasticsearch-svc" . }} 9200 &
 {{- end }}
+{{- if .Values.elasticsearch.portForward }}
+{{ .Values.elasticsearch.portForward }} &
+{{- end}}
 {{- if .Values.minio.enabled }}
 kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.minio-svc" . }} 9000 &
 {{- end }}
+{{- if .Values.minio.portForward }}
+{{ .Values.minio.portForward }} &
+{{- end}}
 {{- if .Values.mongodb.enabled }}
 kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.mongo-svc" . }} 27017 &
 {{- end }}
+{{- if .Values.mongodb.portForward }}
+{{ .Values.mongodb.portForward }} &
+{{- end}}
 {{- if .Values.global.kibanaEnabled }}
 kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "lunchables.kibana-svc" . }} 5601 &
 {{- end }}

@@ -18,6 +18,7 @@ minio:
   existingUsername: "rhelmot"
   # existingPassword
   enabled: false
+  portForward: "kubectl port-forward -n rhelmot svc/minio 9000"
 
 elasticsearch:
   clusterDomain: "gwc.sefcom"

@@ -77,6 +77,8 @@ mongodb:
   existingDatabase: "lunchables"
 
   enabled: true
+  # if enabled == false, please set this to any shell command which may be used to forward localhost:27017 to mongo
+  portForward: ""
   service:
     nameOverride: mongodb  # must be unique per release
   persistence:
@@ -98,6 +100,8 @@ minio:
   existingPassword: ""  # in case of s3, use service account secret token
 
   enabled: true
+  # if enabled == false, please set this to any shell command which may be used to forward localhost:9000 to minio/s3
+  portForward: ""
   storageSize: 18Gi  # disk allocation for the greenhouse results, task logs, exploits, and crashes
   fullnameOverride: minio  # must be unique per release
   auth:
@@ -115,6 +119,8 @@ elasticsearch:
   existingEndpoint: ""
 
   enabled: true
+  # if enabled == false, please set this to any shell command which may be used to forward localhost:9200 to elastic
+  portForward: ""
   clusterDomain: "cluster.local"  # change this to your cluster domain
   data:
     persistence:
