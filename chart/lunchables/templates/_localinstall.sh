@@ -1,14 +1,14 @@
 {{ define "lunchables.localinstall" -}}
 #!/bin/sh
 
-TERMINAL_EMULATOR="gnome-terminal"
+TERMINAL_EMULATOR="gnome-terminal --"
 
 cat >~/.local/bin/lunch-adm <<EOF
 #!/bin/sh
 {{ include "lunchables.localenv" . }}
 
-pgrep lunch-portwfd >/dev/null || $TERMINAL_EMULATOR lunch-portfwd
-exec ~/.local/share/lunchables/env/bin/python "\${LUNCHABLES_LEADER-~/.local/share/lunchables/leader.py}" "\$@"
+pgrep lunch-portfwd >/dev/null || $TERMINAL_EMULATOR lunch-portfwd
+exec ~/.local/share/lunchables/env/bin/python "\${LUNCHABLES_LEADER-\$HOME/.local/share/lunchables/leader.py}" "\$@"
 EOF
 chmod +x ~/.local/bin/lunch-adm
 
@@ -23,3 +23,5 @@ rm -rf ~/.local/share/lunchables/env
 python3 -m venv ~/.local/share/lunchables/env
 ~/.local/share/lunchables/env/bin/pip install -r ~/.local/share/lunchables/requirements.txt
 {{ end -}}
+
+unset -f lunch-adm
