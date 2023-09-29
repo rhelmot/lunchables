@@ -346,6 +346,15 @@ def more_actions(subparsers: argparse._SubParsersAction):
         )
         parser_backup.set_defaults(func=action_backup)
 
+        parser_restore = subparsers.add_parser(
+            "restore", help="Copy contents of repositories from a given folder"
+        )
+        parser_restore.add_argument("backup_dir", help="The directory to restore from")
+        parser_restore.add_argument(
+            "repos", nargs="+", help="The repositories to restore"
+        )
+        parser_restore.set_defaults(func=action_restore)
+
 
 async def action_inject_input(pipeline: Pipeline, basename: str, brand: str):
     if not shared_root.is_dir():
@@ -445,13 +454,33 @@ async def action_backup(pipeline: Pipeline, backup_dir: str, repos: List[str]):
         task, repo_basename = repo_name.split(".")
         repo = pipeline.tasks[task].links[repo_basename].repo
         if isinstance(repo, BlobRepository):
-            new_repo = FileRepository(repo_base)
+            new_repo = FileRepository(repo_base, extension=getattr(repo, "extension", getattr(repo, "suffix", "")))
             await new_repo.validate()
             jobs.append(_repo_copy_blob(repo, new_repo))
         elif isinstance(repo, MetadataRepository):
-            new_repo = YamlMetadataFileRepository(repo_base)
+            new_repo = YamlMetadataFileRepository(repo_base, extension=".yaml")
             await new_repo.validate()
             jobs.append(_repo_copy_meta(repo, new_repo))
+        else:
+            print("Warning: cannot backup", repo)
+
+    await asyncio.gather(*jobs)
+
+async def action_restore(pipeline: Pipeline, backup_dir: str, repos: List[str]):
+    backup_base = Path(backup_dir)
+    jobs = []
+    for repo_name in repos:
+        repo_base = backup_base / repo_name
+        task, repo_basename = repo_name.split(".")
+        repo = pipeline.tasks[task].links[repo_basename].repo
+        if isinstance(repo, BlobRepository):
+            new_repo = FileRepository(repo_base, extension=getattr(repo, "extension", getattr(repo, "suffix", "")))
+            await new_repo.validate()
+            jobs.append(_repo_copy_blob(new_repo, repo))
+        elif isinstance(repo, MetadataRepository):
+            new_repo = YamlMetadataFileRepository(repo_base, extension=".yaml")
+            await new_repo.validate()
+            jobs.append(_repo_copy_meta(new_repo, repo))
         else:
             print("Warning: cannot backup", repo)
 
